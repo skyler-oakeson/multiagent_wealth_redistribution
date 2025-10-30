@@ -13,5 +13,8 @@ init:
 test:
 	$(VENV_ACTIVATE) && python -m pytest tests/
 
+run: 
+	$(VENV_ACTIVATE) && python src/main.py
+
 clean:
 	rm -rf $(VENV)
