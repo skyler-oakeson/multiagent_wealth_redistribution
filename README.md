@@ -19,3 +19,21 @@ make run
 # Run tests
 make test
 ```
+
+# Linting
+```bash
+# Lint project
+make lint
+```
+
+# Type Checking
+```bash
+# Type check project
+make check
+```
+
+# Clean venv
+```bash
+# Remove venv
+make clean
+```
