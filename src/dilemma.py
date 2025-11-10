@@ -9,10 +9,12 @@ Prisoners(4, 3, 2, 1)
 StagHunt(4, 3, 2, 1)
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import override
 
 Rewards = tuple[int, int]
 Choices = tuple[bool, bool]
+
 
 class Dilemma(ABC):
     """
@@ -26,10 +28,10 @@ class Dilemma(ABC):
     """
     def __init__(self, reward: int, punishment: int, sucker: int, temptation: int):
 
-        self.reward: int = reward
-        self.punishment: int = punishment
-        self.sucker: int = sucker
-        self.temptation: int = temptation
+        self._reward: int = reward
+        self._punishment: int = punishment
+        self._sucker: int = sucker
+        self._temptation: int = temptation
 
         self._board: dict[Choices, Rewards] = {
          (True, True): (reward, reward),
@@ -38,6 +40,11 @@ class Dilemma(ABC):
          (False, False): (punishment, punishment),
          }
 
+    @abstractmethod
+    def assert_values(self):
+        """
+        Abstract method to ensures that a dilemmas values are correct.
+        """
 
     def play(self, r_move: bool, c_move: bool) -> Rewards:
         """ 
@@ -47,6 +54,55 @@ class Dilemma(ABC):
 
         return self._board[(r_move, c_move)]
 
+    @property
+    def reward(self):
+        """ Reward property getter """
+        return self._reward
+
+    @reward.setter
+    def reward(self, reward: int):
+        """ Reward property setter """
+        self._reward = reward
+        self.assert_values()
+        self._board[(True,True)] = (self._reward, self._reward)
+
+    @property
+    def sucker(self):
+        """ Sucker property getter """
+        return self._sucker
+
+    @sucker.setter
+    def sucker(self, sucker: int):
+        """ Sucker property setter """
+        self._sucker = sucker
+        self.assert_values()
+        self._board[(True,False)] = (self._sucker, self._temptation)
+        self._board[(False,True)] = (self._temptation, self._sucker)
+
+    @property
+    def punishment(self):
+        """ Punishment property getter """
+        return self._punishment
+
+    @punishment.setter
+    def punishment(self, punishment: int):
+        """ Punishment property setter """
+        self._punishment = punishment
+        self.assert_values()
+        self._board[(False,False)] = (self._punishment, self._punishment)
+
+    @property
+    def temptation(self):
+        """ Temptation property getter """
+        return self._temptation
+
+    @temptation.setter
+    def temptation(self, temptation: int):
+        """ Temptation property setter """
+        self._temptation = temptation
+        self.assert_values()
+        self._board[(True,False)] = (self._sucker, self._temptation)
+        self._board[(False,True)] = (self._temptation, self._sucker)
 
 class Prisoners(Dilemma):
     """
@@ -62,8 +118,12 @@ class Prisoners(Dilemma):
     """
 
     def __init__(self, temptation: int, reward: int, punishment: int, sucker: int):
-        assert(temptation > reward > punishment > sucker)
         super().__init__(reward, punishment, sucker, temptation)
+        self.assert_values()
+
+    @override
+    def assert_values(self):
+        assert self.temptation > self.reward > self.punishment > self.sucker
 
 
 class StagHunt(Dilemma):
@@ -80,8 +140,12 @@ class StagHunt(Dilemma):
     """
 
     def __init__(self, reward: int, temptation: int, punishment: int, sucker: int):
-        assert(reward > temptation > punishment > sucker)
         super().__init__(reward, punishment, sucker, temptation)
+        self.assert_values()
+
+    @override
+    def assert_values(self):
+        assert self.reward > self.temptation > self.punishment > self.sucker
 
 
 class Snowdrift(Dilemma):
@@ -96,8 +160,12 @@ class Snowdrift(Dilemma):
     """
 
     def __init__(self, temptation: int, reward: int, sucker: int, punishment: int):
-        assert(temptation > reward > sucker > punishment)
-        super().__init__(reward, temptation, sucker, punishment)
+        assert temptation > reward > sucker > punishment
+        super().__init__(reward, punishment, sucker, temptation)
+
+    @override
+    def assert_values(self):
+        assert self.temptation > self.reward > self.sucker > self.punishment
 
 
 class Harmony(Dilemma):
@@ -114,8 +182,13 @@ class Harmony(Dilemma):
     """
 
     def __init__(self, reward: int, temptation: int, sucker: int, punishment: int):
-        assert(reward > temptation > sucker > punishment)
         super().__init__(reward, punishment, sucker, temptation)
+        self.assert_values()
+
+    @override
+    def assert_values(self):
+        assert self.reward > self.temptation > self.sucker > self.punishment
+
 
 class Deadlock(Dilemma):
     """
@@ -131,6 +204,9 @@ class Deadlock(Dilemma):
     """
 
     def __init__(self, temptation: int, punishment: int, reward: int, sucker: int):
-        assert(temptation > punishment > reward > sucker)
         super().__init__(reward, punishment, sucker, temptation)
+        self.assert_values()
 
+    @override
+    def assert_values(self):
+        assert self.temptation > self.punishment > self.reward > self.sucker

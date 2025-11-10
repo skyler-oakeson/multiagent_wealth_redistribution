@@ -5,11 +5,10 @@ Promotes Cooperation in Multiagent Systems: https://arxiv.org/pdf/1802.01730.
 Authored by Flavio L. Pinherio and Fernando P. Santos.
 """
 
-from dilemma import Prisoners
+from dilemma import Prisoners, StagHunt
 
 def main():
     """ Programs entry point """
-    prisoners = Prisoners(4, 3, 2, 1)
-    print(prisoners.play(True, True))
+    p = Prisoners(4, 3, 2, 1)
 
 main()
