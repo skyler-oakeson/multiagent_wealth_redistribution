@@ -15,7 +15,6 @@ from typing import override
 Rewards = tuple[int, int]
 Choices = tuple[bool, bool]
 
-
 class Dilemma(ABC):
     """
     Abstract base class for all social dilemmas to be built on.
@@ -103,6 +102,7 @@ class Dilemma(ABC):
         self.assert_values()
         self._board[(True,False)] = (self._sucker, self._temptation)
         self._board[(False,True)] = (self._temptation, self._sucker)
+
 
 class Prisoners(Dilemma):
     """
