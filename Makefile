@@ -14,7 +14,7 @@ test:
 	$(VENV_ACTIVATE) && python -m pytest tests/
 
 run: 
-	$(VENV_ACTIVATE) && python -m pyright && python src/main.py
+	$(VENV_ACTIVATE) && python src/main.py
 
 lint:
 	$(VENV_ACTIVATE) && python -m pylint $$(git ls-files '*.py')

@@ -5,8 +5,11 @@ Promotes Cooperation in Multiagent Systems: https://arxiv.org/pdf/1802.01730.
 Authored by Flavio L. Pinherio and Fernando P. Santos.
 """
 
+from dilemma import Prisoners
+
 def main():
     """ Programs entry point """
-    print("This is gonna be something I swear.")
+    prisoners = Prisoners(4, 3, 2, 1)
+    print(prisoners.play(True, True))
 
 main()
