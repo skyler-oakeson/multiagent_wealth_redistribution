@@ -1,22 +1,27 @@
 """ 
-This module implements different social dilemmas normal form games. Each
-is generated from an ordering of utility values.
+This module implements different social dilemma 2X2 normal form games. Each is
+generated from a specific ordering of utility values.
 """
 
-from enum import Enum
-from typing import assert_never, override
+from typing import override
 
 Rewards = tuple[float, float]
 Choices = tuple[bool, bool]
 
 class Dilemma:
     """
-    Abstract base class for all social dilemmas to be built on.
+    Class for social dilemmas to be built on.
 
     r (int): Reward utility value of both players cooperating.
     p (int): Punishment utility value of both players defecting.
     s (int): Sucker utility value of a player that cooperated while the other defected.
     t (int): Temptation utility value of a player that defected while the other cooperated.
+
+    Games take the form:
+       |  C  |  D
+    ---|-----|-----
+     C | R,R | S,T
+     D | T,S | P,P
 
     Dilemmas:
         prisoners: T > R > P > S
@@ -55,19 +60,20 @@ class Dilemma:
          (False, False): (self.p, self.p),
          }
 
+
     @override
     def __repr__(self) -> str:
         board = "  "
         for i, col in enumerate(["C", "D"]):
             board += f"{col}" + " " * 9
 
-        board += f"\n" 
+        board += "\n"
         for row_label, row in zip(["C", "D"], [True, False]):
             board += row_label + " "
             for col in [True, False]:
                 r_val, c_val = self._board[(row, col)]
                 board += "(%.1f, %.1f)" % (r_val, c_val)
-            board += f"\n" 
+            board += "\n"
         return board
 
 

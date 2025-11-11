@@ -7,6 +7,19 @@ Authored by Flavio L. Pinherio and Fernando P. Santos.
 
 from enum import Enum
 from dilemma import Dilemma
+from typing import TypedDict
+
+class Strategy(Enum):
+    COOPERATE = 1
+    DEFECT = 0
+
+
+class Node(TypedDict):
+    strategy: Strategy
+    utility: int
+    surplus: int
+    neighbors: set[int]
+
 
 class Simulation():
     graph = {}
@@ -14,14 +27,10 @@ class Simulation():
     tax_threshold = 1  # default is 1 in the paper
     tax_rate = 0.1  # 0.0 - 1.0
 
-    class Strategy(Enum):
-        COOPERATE = 1
-        DEFECT = 0
-
     def __init__(self, num_nodes: int):
-        self.graph: dict[int, dict[str, Strategy | int | set[Unknown]]] = {
+        self.graph: dict[int, Node] = {
             i: {
-                "strategy": self.Strategy.COOPERATE if i % 2 == 0 else self.Strategy.DEFECT,  # even = cooperate, odd = defect
+                "strategy": Strategy.COOPERATE if i % 2 == 0 else Strategy.DEFECT,  # even = cooperate, odd = defect
                 "utility": 0,
                 "surplus": 0,
                 "neighbors": set()  # neighbors will be added later according to different graph structures
@@ -122,7 +131,7 @@ class Simulation():
         reset payoffs so the simulation can be repeated
         """
 
-        for node in self.graph:
+        for node in self.graph.values():
             node['utility'] = 0
             node['surplus'] = 0
 
