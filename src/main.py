@@ -65,7 +65,7 @@ class Simulation():
         pass
 
 
-    def play(self, T: float=1.5):
+    def play(self, T: float=1.5): 
         """
         Every node plays every other node in a single round of the Prisoner's Dilemma.
 
