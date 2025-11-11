@@ -12,10 +12,10 @@ class Dilemma:
     """
     Class for social dilemmas to be built on.
 
-    r (int): Reward utility value of both players cooperating.
-    p (int): Punishment utility value of both players defecting.
-    s (int): Sucker utility value of a player that cooperated while the other defected.
-    t (int): Temptation utility value of a player that defected while the other cooperated.
+    R: (int)  Reward            Both players Cooperate  
+    T: (int)  Temptation        Defect while the other cooperates  
+    S: (int)  Sucker            Cooperate while other defects  
+    P: (int)  Punishment        Mutual Defection
 
     Games take the form:
        |  C  |  D
@@ -24,11 +24,13 @@ class Dilemma:
      D | T,S | P,P
 
     Dilemmas:
-        prisoners: T > R > P > S
-        harmony: R > T > S > P
-        staghunt: R > T > P > S
-        snowdrift: T > R > S > P
-        deadlock: T > P > R > S
+        "prisoners": T > R > P > S
+        "harmony": R > T > S > P
+        "staghunt": R > T > P > S
+        "snowdrift": T > R > S > P
+        "deadlock": T > P > R > S
+
+    T: Temptation parameter, must be between 1 < t <= 2
     """
 
     r: float
@@ -38,6 +40,8 @@ class Dilemma:
 
     def __init__(self, dilemma: str = "prisoners", t: float = 1.5):
         assert 1 < t <= 2
+
+        # ordered from greatest to smallest
         values = [t, 1, 0, 1 - t]
 
         if dilemma == "prisoners":

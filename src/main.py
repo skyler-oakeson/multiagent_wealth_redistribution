@@ -5,16 +5,23 @@ Promotes Cooperation in Multiagent Systems: https://arxiv.org/pdf/1802.01730.
 Authored by Flavio L. Pinherio and Fernando P. Santos.
 """
 
-from enum import Enum
 from dilemma import Dilemma
+from enum import Enum
 from typing import TypedDict
 
+
 class Strategy(Enum):
-    COOPERATE = 1
-    DEFECT = 0
+    """
+    Decisions of agents.
+    """
+    COOPERATE = True
+    DEFECT = False
 
 
 class Node(TypedDict):
+    """
+    Represents an agent in the network.
+    """
     strategy: Strategy
     utility: int
     surplus: int
@@ -23,9 +30,9 @@ class Node(TypedDict):
 
 class Simulation():
     graph = {}
-    edges = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
-    tax_threshold = 1  # default is 1 in the paper
-    tax_rate = 0.1  # 0.0 - 1.0
+    edges: set[int] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
+    tax_threshold: float = 1  # default is 1 in the paper
+    tax_rate: float = 0.1  # 0.0 - 1.0
 
     def __init__(self, num_nodes: int):
         self.graph: dict[int, Node] = {
@@ -87,14 +94,7 @@ class Simulation():
          D | T,S | P,P
 
         """
-
-        R = 1
-        P = 0
-        S = 1 - T
-
-        if T < 1 or T > 2:
-            print("Temptation parameter must be between 1 and 2")
-            return
+        pass
 
 
     def get_surplus(self, threshold: float = tax_threshold):
@@ -161,10 +161,8 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    prisoners = Dilemma("prisoners")
-    staghunt = Dilemma("staghunt")
-    print(prisoners)
-    print(staghunt)
+    prisoners = Dilemma("prisoners", t=1.2)
+    print(prisoners.play(True, False))
     # sim = Simulation(1000)
     # sim.build_HRG()
     # # or
