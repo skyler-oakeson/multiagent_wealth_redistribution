@@ -5,13 +5,8 @@ Promotes Cooperation in Multiagent Systems: https://arxiv.org/pdf/1802.01730.
 Authored by Flavio L. Pinherio and Fernando P. Santos.
 """
 
-from dilemma import Prisoners, StagHunt
 from enum import Enum
-import random
-
-# def main():
-#     """ Programs entry point """
-#     p = Prisoners(4, 3, 2, 1)
+from dilemma import Dilemma
 
 class Simulation():
     graph = {}
@@ -23,8 +18,8 @@ class Simulation():
         COOPERATE = 1
         DEFECT = 0
 
-    def __init__(self, num_nodes):
-        self.graph = {
+    def __init__(self, num_nodes: int):
+        self.graph: dict[int, dict[str, Strategy | int | set[Unknown]]] = {
             i: {
                 "strategy": self.Strategy.COOPERATE if i % 2 == 0 else self.Strategy.DEFECT,  # even = cooperate, odd = defect
                 "utility": 0,
@@ -35,7 +30,7 @@ class Simulation():
         }
 
 
-    def build_HRG(self, degree):
+    def build_HRG(self, degree: int):
         """
         Homogenous Random Graph: adds edges to self.graph with an even distribution
         
@@ -44,7 +39,7 @@ class Simulation():
         pass
 
 
-    def build_PAG(self, avg_degree):
+    def build_PAG(self, avg_degree: int):
         """
         Preferential Attachment Graph: adds edges to self.graph using preferential attachment
 
@@ -54,7 +49,7 @@ class Simulation():
         pass
 
 
-    def play(self, T=1.5):
+    def play(self, T: float=1.5):
         """
         Every node plays every other node in a single round of the Prisoner's Dilemma.
 
@@ -93,14 +88,14 @@ class Simulation():
             return
 
 
-    def get_surplus(self, threshold=tax_threshold):
+    def get_surplus(self, threshold: float = tax_threshold):
         """
         for each node, if the utility exceeds the threshold, move the surplus amount to self.graph[node]["surplus"]
         """
         pass
 
 
-    def distribute_tax(self, tax_rate=tax_rate, radius=1, rand=False):
+    def distribute_tax(self, tax_rate: float = tax_rate, radius: int = 1, rand: bool = False):
         """
         for each node, remove tax_rate * surplus from the surplus and distribute evenly to the neighbors in beneficiary radius
 
@@ -110,7 +105,7 @@ class Simulation():
         pass
 
 
-    def update_strategies(self, num_updates=1):
+    def update_strategies(self, num_updates: int = 1):
         """
         update the strategy of a random set of nodes. The paper does this step like so:
 
@@ -157,8 +152,12 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    sim = Simulation(1000)
-    sim.build_HRG()
-    # or
-    # sim.build_PAG()
-    sim.run()
+    prisoners = Dilemma("prisoners")
+    staghunt = Dilemma("staghunt")
+    print(prisoners)
+    print(staghunt)
+    # sim = Simulation(1000)
+    # sim.build_HRG()
+    # # or
+    # # sim.build_PAG()
+    # sim.run()
