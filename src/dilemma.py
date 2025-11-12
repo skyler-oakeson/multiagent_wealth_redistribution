@@ -36,10 +36,10 @@ class Dilemma:
         ----------
         dilemma : str
             "prisoners": T > R > P > S
-            "harmony": R > T > S > P
-            "staghunt": R > T > P > S
+            "harmony":   R > T > S > P
+            "staghunt":  R > T > P > S
             "snowdrift": T > R > S > P
-            "deadlock": T > P > R > S
+            "deadlock":  T > P > R > S
 
         m : float
             The motivation value or the greatest value the game, must be between 1 < m <= 2, default = 1.5

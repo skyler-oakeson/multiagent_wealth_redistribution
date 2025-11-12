@@ -25,8 +25,7 @@ class Node(TypedDict):
     strategy: Strategy
     utility: int
     surplus: int
-    neighbors: set[int]
-
+    neighbors: set[tuple[int, int]]
 
 class Simulation():
     graph = {}

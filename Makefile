@@ -17,7 +17,7 @@ run:
 	$(VENV_ACTIVATE) && python src/main.py
 
 lint:
-	$(VENV_ACTIVATE) && python -m pylint $$(git ls-files '*.py')
+	$(VENV_ACTIVATE) && python -m ruff check --fix $$(git ls-files '*.py')
 
 check:
 	$(VENV_ACTIVATE) && python -m pyright $$(git ls-files '*.py')
