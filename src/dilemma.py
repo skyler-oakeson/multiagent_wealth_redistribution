@@ -24,7 +24,7 @@ class Dilemma:
     s: float
     t: float
 
-    def __init__(self, dilemma: str = "prisoners", m: float = 1.5):
+    def __init__(self, type: str = "prisoners", m: float = 1.5):
         """
         Games take the form:
            |  C  |  D
@@ -49,15 +49,15 @@ class Dilemma:
         # ordered from greatest to smallest
         values = [m, 1, 0, 1 - m]
 
-        if dilemma == "prisoners":
+        if type == "prisoners":
             self.t, self.r, self.p, self.s = values
-        elif dilemma == "harmony":
+        elif type == "harmony":
             self.r, self.t, self.s, self.p = values
-        elif dilemma == "staghunt":
+        elif type == "staghunt":
             self.r, self.t, self.p, self.s = values
-        elif dilemma == "snowdrift":
+        elif type == "snowdrift":
             self.t, self.r, self.s, self.p = values
-        elif dilemma == "deadlock":
+        elif type == "deadlock":
             self.t, self.p, self.r, self.s = values
         else:
             raise Exception("Dilemma not in [prisoners, harmony, staghunt, snowdrift, deadlock]")
