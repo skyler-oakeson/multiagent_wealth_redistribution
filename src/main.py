@@ -161,8 +161,8 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    prisoners = Dilemma("prisoners", t=1.2)
-    print(prisoners.play(True, False))
+    sh = Dilemma("staghunt", m=1.1)
+    print(sh)
     # sim = Simulation(1000)
     # sim.build_HRG()
     # # or

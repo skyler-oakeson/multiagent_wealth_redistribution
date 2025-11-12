@@ -1,6 +1,5 @@
 """ 
-This module implements different social dilemma 2X2 normal form games. Each is
-generated from a specific ordering of utility values.
+This module implements different social dilemma 2X2 normal form games. 
 """
 
 from typing import override
@@ -10,27 +9,14 @@ Choices = tuple[bool, bool]
 
 class Dilemma:
     """
-    Class for social dilemmas to be built on.
+    Class for 2x2 normal form social dilemmas to be built on.
 
-    R: (int)  Reward            Both players Cooperate  
-    T: (int)  Temptation        Defect while the other cooperates  
-    S: (int)  Sucker            Cooperate while other defects  
-    P: (int)  Punishment        Mutual Defection
-
-    Games take the form:
-       |  C  |  D
-    ---|-----|-----
-     C | R,R | S,T
-     D | T,S | P,P
-
-    Dilemmas:
-        "prisoners": T > R > P > S
-        "harmony": R > T > S > P
-        "staghunt": R > T > P > S
-        "snowdrift": T > R > S > P
-        "deadlock": T > P > R > S
-
-    T: Temptation parameter, must be between 1 < t <= 2
+    Fields
+    ------
+    r: (int)  Reward            Both players Cooperate  
+    t: (int)  Temptation        Defect while the other cooperates  
+    s: (int)  Sucker            Cooperate while other defects  
+    p: (int)  Punishment        Mutual Defection
     """
 
     r: float
@@ -38,11 +24,30 @@ class Dilemma:
     s: float
     t: float
 
-    def __init__(self, dilemma: str = "prisoners", t: float = 1.5):
-        assert 1 < t <= 2
+    def __init__(self, dilemma: str = "prisoners", m: float = 1.5):
+        """
+        Games take the form:
+           |  C  |  D
+        ---|-----|-----
+         C | R,R | S,T
+         D | T,S | P,P
+
+        Parameters
+        ----------
+        dilemma : str
+            "prisoners": T > R > P > S
+            "harmony": R > T > S > P
+            "staghunt": R > T > P > S
+            "snowdrift": T > R > S > P
+            "deadlock": T > P > R > S
+
+        m : float
+            The motivation value or the greatest value the game, must be between 1 < m <= 2, default = 1.5
+        """
+        assert 1 < m <= 2
 
         # ordered from greatest to smallest
-        values = [t, 1, 0, 1 - t]
+        values = [m, 1, 0, 1 - m]
 
         if dilemma == "prisoners":
             self.t, self.r, self.p, self.s = values
@@ -83,8 +88,21 @@ class Dilemma:
 
     def play(self, r_move: bool, c_move: bool) -> Rewards:
         """ 
-        Takes two bools representing a row and col player choice.
+        Takes two bools representing a row and column player choice.
         Returns the utility values for both in a tuple (R, C).
+
+        Parameters
+        ----------
+        r_move : bool
+            The choice of the row player to cooperate (True) or defect (False).
+            
+        c_move : bool
+            The choice of the column player to cooperate (True) or defect (False).
+
+        Returns
+        -------
+        tuple[int, int]
+            The resulting utility of a row and column players moves (RU, CU)
         """
 
         return self._board[(r_move, c_move)]
