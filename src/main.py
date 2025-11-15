@@ -8,6 +8,7 @@ Authored by Flavio L. Pinherio and Fernando P. Santos.
 from dilemma import Dilemma
 from enum import Enum
 from typing import TypedDict
+import random
 
 
 class Strategy(Enum):
@@ -25,15 +26,12 @@ class Node(TypedDict):
     strategy: Strategy
     utility: int
     surplus: int
-    neighbors: set[tuple[int, int]]
+    neighbors: set[int]
 
 class Simulation():
-    graph = {}
-    edges: set[int] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
-    tax_threshold: float = 1  # default is 1 in the paper
-    tax_rate: float = 0.1  # 0.0 - 1.0
 
     def __init__(self, num_nodes: int):
+        self.num_nodes = num_nodes
         self.graph: dict[int, Node] = {
             i: {
                 "strategy": Strategy.COOPERATE if i % 2 == 0 else Strategy.DEFECT,  # even = cooperate, odd = defect
@@ -43,26 +41,60 @@ class Simulation():
             }
             for i in range(num_nodes)
         }
+        self.edges: set[frozenset] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
 
 
-    def build_HRG(self, degree: int):
+    def __add_edge(self, node_0, node_1):
+        """
+        Helper function for adding an edge to the graph
+        """
+        if frozenset((node_0, node_1)) in self.edges:
+            return False
+        self.graph[node_0]["neighbors"].add(node_1)
+        self.graph[node_1]["neighbors"].add(node_0)
+        self.edges.add(frozenset((node_0, node_1)))
+        return True
+
+    def build_HRG(self, degree: int=4):
         """
         Homogenous Random Graph: adds edges to self.graph with an even distribution
         
         degree (int): degree of each node
         """
-        pass
+        if len(self.edges) > 0:
+            print("This graph has already been populated")
+            return
+        available_nodes = set(range(self.num_nodes))
+        while len(available_nodes) > 1:
+            node_0 = random.choice(list(available_nodes))
+            node_1 = random.choice(list(available_nodes.difference({node_0})))
+            if self.__add_edge(node_0, node_1):
+                if len(self.graph[node_0]["neighbors"]) == degree:
+                    available_nodes.remove(node_0)
+                if len(self.graph[node_1]["neighbors"]) == degree:
+                    available_nodes.remove(node_1)
 
 
-    def build_PAG(self, avg_degree: int):
+    def build_PAG(self, avg_degree: int=4):
         """
         Preferential Attachment Graph: adds edges to self.graph using preferential attachment
 
         avg_degree (int): multiply by number of nodes in the graph to get total edges
         (we could alternativly pass in total edges to this function if that's easier)
         """
-        pass
-
+        if len(self.edges) > 0:
+            print("This graph has already been populated")
+            return
+        available_nodes = list(range(self.num_nodes))
+        edges_to_add = avg_degree * self.num_nodes // 2
+        while edges_to_add:
+            node_0 = random.choice(available_nodes)
+            node_1 = node_0
+            while node_1 == node_0:
+                node_1 = random.choice(available_nodes)
+            if self.__add_edge(node_0, node_1):
+                available_nodes += [node_0, node_1]  # adds another instance of the nodes used so they are more likey to be chosen again
+                edges_to_add -= 1
 
     def play(self, T: float=1.5): 
         """
@@ -96,14 +128,14 @@ class Simulation():
         pass
 
 
-    def get_surplus(self, threshold: float = tax_threshold):
+    def get_surplus(self, threshold: float=1):
         """
         for each node, if the utility exceeds the threshold, move the surplus amount to self.graph[node]["surplus"]
         """
         pass
 
 
-    def distribute_tax(self, tax_rate: float = tax_rate, radius: int = 1, rand: bool = False):
+    def distribute_tax(self, tax_rate: float=0.1, radius: int = 1, rand: bool = False):
         """
         for each node, remove tax_rate * surplus from the surplus and distribute evenly to the neighbors in beneficiary radius
 
