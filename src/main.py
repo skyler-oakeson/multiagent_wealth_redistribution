@@ -45,6 +45,14 @@ class Simulation():
         self.edges: set[frozenset] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
 
 
+    def print_graph(self):
+        """
+        prints the graph with each node on a new line
+        """
+        for node, vals in self.graph.items():
+            print(f"{node}: {vals}")
+
+
     def __add_edge(self, node_0: int, node_1: int) -> bool:
         """
         Helper function for adding an edge to the graph
