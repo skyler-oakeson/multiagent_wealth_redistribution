@@ -15,8 +15,8 @@ class Strategy(Enum):
     """
     Decisions of agents.
     """
-    COOPERATE = 1
-    DEFECT = 2
+    COOPERATE = True
+    DEFECT = False
 
 
 class Node(TypedDict):
@@ -30,8 +30,9 @@ class Node(TypedDict):
 
 class Simulation():
 
-    def __init__(self, num_nodes: int):
+    def __init__(self, num_nodes: int, dilemma: Dilemma=Dilemma()):
         self.num_nodes = num_nodes
+        self.dilemma = dilemma
         self.graph: dict[int, Node] = {
             i: {
                 "strategy": Strategy.COOPERATE if i % 2 == 0 else Strategy.DEFECT,  # even = cooperate, odd = defect
@@ -119,7 +120,7 @@ class Simulation():
                 available_nodes += [node_0, node_1]
 
 
-    def play(self, T: float=1.5): 
+    def play(self): 
         """
         Every node plays every neighbor in a single round of the Prisoner's Dilemma.
 
@@ -148,7 +149,15 @@ class Simulation():
          D | T,S | P,P
 
         """
-        pass
+        for edge in self.edges:
+            edge = tuple(edge)
+            node_0 = self.graph[edge[0]]
+            node_1 = self.graph[edge[1]]
+            rewards = self.dilemma.play(node_0["strategy"].value, node_1["strategy"].value)
+            node_0["utility"] += rewards[0]
+            node_1["utility"] += rewards[1]
+
+
 
 
     def calc_surplus(self, threshold: float=1):
@@ -220,8 +229,7 @@ class Simulation():
     def run(self):
         """
         defines the main loop for the simulation
-        """
-
+        """        
         while True:
             self.play()
             self.calc_surplus()
@@ -229,7 +237,7 @@ class Simulation():
             self.update_strategies()
             self.reset_payoffs()
             winning_stragety = self.is_done()
-            if winning_stragety:
+            if winning_stragety is not None:
                 return winning_stragety
 
 
