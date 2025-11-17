@@ -15,8 +15,8 @@ class Strategy(Enum):
     """
     Decisions of agents.
     """
-    COOPERATE = True
-    DEFECT = False
+    COOPERATE = 1
+    DEFECT = 2
 
 
 class Node(TypedDict):
@@ -44,7 +44,7 @@ class Simulation():
         self.edges: set[frozenset] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
 
 
-    def __add_edge(self, node_0, node_1):
+    def __add_edge(self, node_0: int, node_1: int) -> bool:
         """
         Helper function for adding an edge to the graph
         """
@@ -55,16 +55,24 @@ class Simulation():
         self.edges.add(frozenset((node_0, node_1)))
         return True
 
-    def build_HRG(self, degree: int=4):
+    def build_HRG(self, degree: int=4, attempts: int=10):
         """
         Homogenous Random Graph: adds edges to self.graph with an even distribution
+        this is a relaxed implementation where one node often ends up with with degree - 1 
+        or degree - 2 becuase it's much simpler to implement and will serve the same purpose for 
+        this simulation
         
-        degree (int): degree of each node
+        degree (int): degree of each node. degree < self.num_nodes
+        attempts (int): stop building after this many consecutive failed attempts to create a new edge
         """
         if len(self.edges) > 0:
             print("This graph has already been populated")
             return
+        
+        assert degree < self.num_nodes
+
         available_nodes = set(range(self.num_nodes))
+        unsuccessful = 0
         while len(available_nodes) > 1:
             node_0 = random.choice(list(available_nodes))
             node_1 = random.choice(list(available_nodes.difference({node_0})))
@@ -73,32 +81,47 @@ class Simulation():
                     available_nodes.remove(node_0)
                 if len(self.graph[node_1]["neighbors"]) == degree:
                     available_nodes.remove(node_1)
+                unsuccessful = 0
+            else:
+                unsuccessful += 1
+
+            if unsuccessful == attempts:
+                print(f"Quit building HRG after {attempts} consecutive failed attempts")
+                return
 
 
-    def build_PAG(self, avg_degree: int=4):
+
+    def build_PAG(self, edges_new: int=2):
         """
         Preferential Attachment Graph: adds edges to self.graph using preferential attachment
 
-        avg_degree (int): multiply by number of nodes in the graph to get total edges
-        (we could alternativly pass in total edges to this function if that's easier)
+        edges_new (int): number of edges created when a new node enters the graph
         """
         if len(self.edges) > 0:
             print("This graph has already been populated")
             return
-        available_nodes = list(range(self.num_nodes))
-        edges_to_add = avg_degree * self.num_nodes // 2
-        while edges_to_add:
-            node_0 = random.choice(available_nodes)
-            node_1 = node_0
-            while node_1 == node_0:
+        
+        assert edges_new < self.num_nodes
+
+        available_nodes = []
+
+        # create the smallest possible starting graph (edges_new + 1 complete graph)
+        for node_0 in range(edges_new):
+            for node_1 in range(node_0 + 1, edges_new + 1):
+                self.__add_edge(node_0, node_1)
+                available_nodes += [node_0, node_1]
+
+        # add the rest of the nodes using preferential attachment
+        for node_0 in range(edges_new + 1, self.num_nodes):
+            for _ in range(edges_new):
                 node_1 = random.choice(available_nodes)
-            if self.__add_edge(node_0, node_1):
-                available_nodes += [node_0, node_1]  # adds another instance of the nodes used so they are more likey to be chosen again
-                edges_to_add -= 1
+                self.__add_edge(node_0, node_1)
+                available_nodes += [node_0, node_1]
+
 
     def play(self, T: float=1.5): 
         """
-        Every node plays every other node in a single round of the Prisoner's Dilemma.
+        Every node plays every neighbor in a single round of the Prisoner's Dilemma.
 
         R:	Reward	Both players Cooperate
         T:	Temptation	Defect while the other cooperates
@@ -128,11 +151,15 @@ class Simulation():
         pass
 
 
-    def get_surplus(self, threshold: float=1):
+    def calc_surplus(self, threshold: float=1):
         """
         for each node, if the utility exceeds the threshold, move the surplus amount to self.graph[node]["surplus"]
         """
-        pass
+        for node in self.graph.values():
+            if node["utility"] > threshold:
+                node["surplus"] += node["utility"] - threshold
+                node["utility"] = threshold
+
 
 
     def distribute_tax(self, tax_rate: float=0.1, radius: int = 1, rand: bool = False):
@@ -161,19 +188,34 @@ class Simulation():
         """
         reset payoffs so the simulation can be repeated
         """
-
         for node in self.graph.values():
             node['utility'] = 0
             node['surplus'] = 0
 
 
-    def is_done(self):
+    def get_num_cooperate(self) -> int:
+        """
+        gets the number of cooperating nodes in the graph
+        """
+        num_cooperate = 0
+        for node in self.graph.values():
+            if node["strategy"] == Strategy.COOPERATE:
+                num_cooperate += 1
+
+        return num_cooperate
+    
+
+    def is_done(self) -> Strategy:
         """
         checks if the graph has converged to all cooperate or all defect
-        returns the winning policy if done else False
+        returns the winning policy if done else None
         """
-        pass
-
+        num_cooperate = self.get_num_cooperate()
+        if num_cooperate == 0:
+            return Strategy.DEFECT
+        elif num_cooperate == self.num_nodes:
+            return Strategy.COOPERATE
+    
 
     def run(self):
         """
@@ -182,7 +224,7 @@ class Simulation():
 
         while True:
             self.play()
-            self.get_surplus()
+            self.calc_surplus()
             self.distribute_tax()
             self.update_strategies()
             self.reset_payoffs()
