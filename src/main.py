@@ -24,15 +24,15 @@ class Node(TypedDict):
     Represents an agent in the network.
     """
     strategy: Strategy
-    utility: int
-    surplus: int
+    utility: float
+    surplus: float
     neighbors: set[int]
 
 class Simulation():
 
-    def __init__(self, num_nodes: int, dilemma: Dilemma=Dilemma()):
-        self.num_nodes = num_nodes
-        self.dilemma = dilemma
+    def __init__(self, num_nodes: int, dilemma: None | Dilemma = None):
+        self.num_nodes: int  = num_nodes
+        self.dilemma: Dilemma = Dilemma() if not dilemma else dilemma
         self.graph: dict[int, Node] = {
             i: {
                 "strategy": Strategy.COOPERATE if i % 2 == 0 else Strategy.DEFECT,  # even = cooperate, odd = defect
@@ -42,7 +42,7 @@ class Simulation():
             }
             for i in range(num_nodes)
         }
-        self.edges: set[frozenset] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
+        self.edges: set[frozenset[int]] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
 
 
     def print_graph(self):
@@ -112,19 +112,19 @@ class Simulation():
         
         assert edges_new < self.num_nodes
 
-        available_nodes = []
+        available_nodes: list[int] = []
 
         # create the smallest possible starting graph (edges_new + 1 complete graph)
         for node_0 in range(edges_new):
             for node_1 in range(node_0 + 1, edges_new + 1):
-                self.__add_edge(node_0, node_1)
+                _ = self.__add_edge(node_0, node_1)
                 available_nodes += [node_0, node_1]
 
         # add the rest of the nodes using preferential attachment
         for node_0 in range(edges_new + 1, self.num_nodes):
             for _ in range(edges_new):
                 node_1 = random.choice(available_nodes)
-                self.__add_edge(node_0, node_1)
+                _ = self.__add_edge(node_0, node_1)
                 available_nodes += [node_0, node_1]
 
 
@@ -222,38 +222,35 @@ class Simulation():
         return num_cooperate
     
 
-    def is_done(self) -> Strategy:
+    def winning_strategy(self) -> Strategy:
         """
         checks if the graph has converged to all cooperate or all defect
         returns the winning policy if done else None
         """
         num_cooperate = self.get_num_cooperate()
-        if num_cooperate == 0:
-            return Strategy.DEFECT
-        elif num_cooperate == self.num_nodes:
+        if num_cooperate > self.num_nodes // 2:
             return Strategy.COOPERATE
+        else:
+            return Strategy.DEFECT
     
 
-    def run(self):
+    def run(self, iterations: int):
         """
         defines the main loop for the simulation
         """        
-        while True:
+        for iter in range(iterations):
             self.play()
             self.calc_surplus()
             self.distribute_tax()
             self.update_strategies()
             self.reset_payoffs()
-            winning_stragety = self.is_done()
-            if winning_stragety is not None:
-                return winning_stragety
+
+        winning_strategy = self.winning_strategy()
+        return winning_strategy 
 
 
 if __name__ == "__main__":
-    sh = Dilemma("staghunt", m=1.1)
-    print(sh)
-    # sim = Simulation(1000)
-    # sim.build_HRG()
-    # # or
-    # # sim.build_PAG()
-    # sim.run()
+    sim = Simulation(1000)
+    sim.build_HRG()
+    sim.play()
+    sim.print_graph()

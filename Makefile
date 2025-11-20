@@ -20,7 +20,7 @@ lint:
 	$(VENV_ACTIVATE) && python -m ruff check --fix $$(git ls-files '*.py')
 
 check:
-	$(VENV_ACTIVATE) && python -m pyright $$(git ls-files '*.py')
+	$(VENV_ACTIVATE) && python -m pyright $$(git ls-files '*.py') && python -m ruff check -v $$(git ls-files '*.py')
 
 clean:
 	rm -rf $(VENV)
