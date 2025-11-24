@@ -122,11 +122,14 @@ class Simulation():
 
         # add the rest of the nodes using preferential attachment
         for node_0 in range(edges_new + 1, self.num_nodes):
-            for _ in range(edges_new):
-                node_1 = random.choice(available_nodes)
-                _ = self.__add_edge(node_0, node_1)
-                available_nodes += [node_0, node_1]
-
+            edges_to_add = edges_new
+            while edges_to_add > 0:
+                node_1 = node_0
+                while node_1 == node_0:
+                    node_1 = random.choice(available_nodes)
+                if self.__add_edge(node_0, node_1):
+                    available_nodes += [node_0, node_1]
+                    edges_to_add -= 1
 
     def play(self): 
         """
@@ -250,7 +253,7 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    sim = Simulation(1000)
-    sim.build_HRG()
+    sim = Simulation(100)
+    sim.build_PAG()
     sim.play()
     sim.print_graph()
