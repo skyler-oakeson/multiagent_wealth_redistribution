@@ -8,6 +8,7 @@ Authored by Flavio L. Pinherio and Fernando P. Santos.
 from dilemma import Dilemma
 from enum import Enum
 from typing import TypedDict
+import math
 import random
 
 
@@ -23,26 +24,41 @@ class Node(TypedDict):
     """
     Represents an agent in the network.
     """
-    strategy: Strategy
-    utility: float
-    surplus: float
+    id: int
     neighbors: set[int]
+    strategy: Strategy
+    benefit: float
+    surplus: float
+    utility: float
+
 
 class Simulation():
+    def __init__(self, 
+                 num_nodes: int,
+                 temptation: float = 1.1, 
+                 taxation: float = 0.1,
+                 threshold: float = 1,
+                 intensity: float = 1.0,
+                 dilemma: None | Dilemma = None
+                 ):
 
-    def __init__(self, num_nodes: int, dilemma: None | Dilemma = None):
         self.num_nodes: int  = num_nodes
-        self.dilemma: Dilemma = Dilemma() if not dilemma else dilemma
+        self.dilemma: Dilemma = Dilemma(m=temptation) if not dilemma else dilemma
+        self.temptation: float = temptation
+        self.taxation: float = taxation
+        self.intensity: float = intensity
+        self.edges: set[frozenset[int]] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
         self.graph: dict[int, Node] = {
             i: {
+                "id": i,
                 "strategy": Strategy.COOPERATE if i % 2 == 0 else Strategy.DEFECT,  # even = cooperate, odd = defect
                 "utility": 0,
+                "benefit": 0,
                 "surplus": 0,
                 "neighbors": set()  # neighbors will be added later according to different graph structures
             }
             for i in range(num_nodes)
         }
-        self.edges: set[frozenset[int]] = set()  # edges can be represented as frozensets within this set to be immutable while avoiding repeats
 
 
     def print_graph(self):
@@ -63,6 +79,7 @@ class Simulation():
         self.graph[node_1]["neighbors"].add(node_0)
         self.edges.add(frozenset((node_0, node_1)))
         return True
+
 
     def build_HRG(self, degree: int=4, attempts: int=10):
         """
@@ -97,7 +114,6 @@ class Simulation():
             if unsuccessful == attempts:
                 print(f"Quit building HRG after {attempts} consecutive failed attempts")
                 return
-
 
 
     def build_PAG(self, edges_new: int=2):
@@ -156,6 +172,15 @@ class Simulation():
          C | R,R | S,T
          D | T,S | P,P
 
+        ∏_i = The accumulated payoff over all interactions agent i participates in.
+        ∏_i = n_Ci * T - σ_i(1 - T) * (n_Di + n_Ci)
+            where
+                i = The agent
+                n = Neighbors
+                n_Ci = The number of neighbors that cooperate
+                n_Di = The number of neighbors that defect
+                σ_i = 1 if i is cooperator 0 if defector
+                T = The temptation parameter
         """
         for edge in self.edges:
             edge = tuple(edge)
@@ -166,6 +191,12 @@ class Simulation():
             node_1["utility"] += rewards[1]
 
 
+    def random_node(self) -> int:
+        return random.choice(list(self.graph.keys()))
+
+
+    def random_neighbor(self, id: int) -> int:
+        return random.choice(list(self.graph[id]["neighbors"]))
 
 
     def calc_surplus(self, threshold: float=1):
@@ -178,27 +209,100 @@ class Simulation():
                 node["utility"] = threshold
 
 
-
-    def distribute_tax(self, tax_rate: float=0.1, radius: int = 1, rand: bool = False):
+    def distribute_tax(self, radius: int = 1, rand: bool = False):
         """
         for each node, remove tax_rate * surplus from the surplus and distribute evenly to the neighbors in beneficiary radius
 
         radius: number of steps to create the beneficiary radius (e.g 1 = immediate neighbors only, 2 = neighbors and neighbors of neighbors)
         rand: if True, distribute the taxed surplus to a random set of nodes equal in size to the calculated beneficiary radius
         """
-        pass
+        for node in self.graph.values():
+            if node['surplus'] > 0:
+                beneficiary_set = [id for id in node["neighbors"] if self.graph[id]['surplus'] == 0]
+                if len(beneficiary_set) == 0:
+                    continue
+
+                tax = node["surplus"] * self.taxation
+                node["surplus"] -= tax
+                share = tax / len(beneficiary_set)
+                for neighbor in beneficiary_set:
+                    self.graph[neighbor]["benefit"] += share
+
+        # RANDOM
+        #     nodes = list(self.graph.values())
+        #     random.shuffle(nodes)
 
 
-    def update_strategies(self, num_updates: int = 1):
+
+
+    def update_strategies(self, num_updates: int = 2):
         """
-        update the strategy of a random set of nodes. The paper does this step like so:
+        This must run AFTER payoff and tax have been distributed.
+
+        Update the strategy of a random set of nodes. The paper does this step like so:
 
             Pick a random agent and a random neighbor:
-                - If the neighbor’s fitness (post-tax utility + any remaining surplus) is higher,
+                - If the neighbor’s fitness (post-tax utility + beneifits) is higher,
                 - The agent may switch to the neighbor’s strategy (probabilistically)
                 - there is a formula for calculating this probability outlined in the paper
+
+
+
+            This means if j is performing much better than i, then i updates
+            his/her strategy adopting the strategy of j. Conversely, if j is
+            performing much worse, i does not update the strategy -- Section 3.5
         """
-        pass
+        for update in range(num_updates):
+            i = self.random_node()
+            j = self.random_neighbor(i)
+            fi = self.calculate_fitness(i)
+            fj = self.calculate_fitness(j)
+            p = self.calculate_mimicry_probablity(fi, fj)
+            swap = random.choices([True, False], weights=[p, 1-p], k=1)
+            if swap:
+                self.graph[i]["strategy"] = self.graph[j]["strategy"]
+
+
+
+    def calculate_mimicry_probablity(self, fi: float, fj: float) -> float:
+        """
+        p = The probability of agent i adopting agent j's strategy.
+        p = 1 / 1 + Exp(-ß(f_i - f_j))
+            where
+                ß = Intensity of selection, a learning rate.
+        """
+        try:
+            p = 1 / (1 + math.exp(-self.intensity * (fj - fi)))
+            return p
+        except:
+            self.print_graph()
+            raise Exception(f"Evaluation failed with {fi}, {fj}")
+
+
+
+    def calculate_fitness(self, id: int) -> float:
+        """
+        f_i = Calculated by adding the money recived after taxation and beneifits have been distributed.
+        f_i = (1 - α)(∏_i - θ) + Σ_j^Z (ơ_i,j * (α * (∏_j - θ))/ |B_j|)
+            where
+                f_i = Fitness of agent i.
+                α = Taxation rate.
+                θ = Surplus threshold.
+                ∏_i = The accumulated payoff over all interactions agent i participates in.
+                Σ_j^Z = Summation from j to Z.
+                Z = The population size or amount of nodes.
+                ơ_i,j = Is equal to one if i is part of the beneficiary set towards which j contributes 0 otherwise.
+                |B_j| = The size of the beneficiary set j is a part of.
+
+        (1 - α)(∏_i - θ) = Surplus AFTER tax.
+        Σ_j^Z (ơ_i,j * (α * (∏_j - θ))/ |B_j|) = Total beneifits recived from the beneficiary sets i is a part of.
+
+        The fitness of agent i comes from subtracting from their accumulated
+        payoff (utility + surplus) their contributions plus the share they
+        obtain from all beneficiary sets they participate in.
+        """
+        node = self.graph[id]
+        return node['utility'] + node['surplus'] + node['benefit']
 
 
     def reset_payoffs(self):
@@ -208,6 +312,7 @@ class Simulation():
         for node in self.graph.values():
             node['utility'] = 0
             node['surplus'] = 0
+            node['benefit'] = 0
 
 
     def get_num_cooperate(self) -> int:
@@ -220,37 +325,39 @@ class Simulation():
                 num_cooperate += 1
 
         return num_cooperate
-    
 
-    def winning_strategy(self) -> Strategy:
+
+    def strategy_distribution(self) -> tuple[float, float]:
         """
         checks if the graph has converged to all cooperate or all defect
         returns the winning policy if done else None
+
+        Returns
+            tuple[float, float] = (cooperator %, defector %)
         """
         num_cooperate = self.get_num_cooperate()
-        if num_cooperate > self.num_nodes // 2:
-            return Strategy.COOPERATE
-        else:
-            return Strategy.DEFECT
-    
+        num_defect = self.num_nodes - num_cooperate
+        return (num_cooperate / self.num_nodes, num_defect / self.num_nodes)
 
-    def run(self, iterations: int):
+
+    def run(self, iterations: int) -> tuple[float, float]:
         """
         defines the main loop for the simulation
         """        
         for iter in range(iterations):
+            print(f"Iteration: {iter}", end="\r")
             self.play()
             self.calc_surplus()
             self.distribute_tax()
             self.update_strategies()
             self.reset_payoffs()
 
-        winning_strategy = self.winning_strategy()
-        return winning_strategy 
+        print(f"\rCompleted {iterations} rounds.")
+
+        return self.strategy_distribution()
 
 
 if __name__ == "__main__":
-    sim = Simulation(1000)
+    sim = Simulation(10**3, temptation=1.3, taxation=0.6, threshold=1.0, intensity=1.0)
     sim.build_HRG()
-    sim.play()
-    sim.print_graph()
+    print(sim.run(10**4))
