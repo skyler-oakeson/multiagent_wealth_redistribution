@@ -138,11 +138,14 @@ class Simulation():
 
         # add the rest of the nodes using preferential attachment
         for node_0 in range(edges_new + 1, self.num_nodes):
-            for _ in range(edges_new):
-                node_1 = random.choice(available_nodes)
-                _ = self.__add_edge(node_0, node_1)
-                available_nodes += [node_0, node_1]
-
+            edges_to_add = edges_new
+            while edges_to_add > 0:
+                node_1 = node_0
+                while node_1 == node_0:
+                    node_1 = random.choice(available_nodes)
+                if self.__add_edge(node_0, node_1):
+                    available_nodes += [node_0, node_1]
+                    edges_to_add -= 1
 
     def play(self): 
         """
@@ -346,11 +349,16 @@ class Simulation():
         """        
         for iter in range(iterations):
             print(f"Iteration: {iter}", end="\r")
+
+
             self.play()
             self.calc_surplus()
             self.distribute_tax()
             self.update_strategies()
             self.reset_payoffs()
+
+            if iter % 1000 == 0:
+                print(self.strategy_distribution())
 
         print(f"\rCompleted {iterations} rounds.")
 
@@ -358,6 +366,6 @@ class Simulation():
 
 
 if __name__ == "__main__":
-    sim = Simulation(10**3, temptation=1.3, taxation=0.6, threshold=1.0, intensity=1.0)
-    sim.build_HRG()
+    sim = Simulation(10**3, temptation=1.6, taxation=0.7, threshold=.7, intensity=1.0)
+    sim.build_PAG()
     print(sim.run(10**4))
