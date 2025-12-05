@@ -5,7 +5,7 @@ Promotes Cooperation in Multiagent Systems: https://arxiv.org/pdf/1802.01730.
 Authored by Flavio L. Pinherio and Fernando P. Santos.
 """
 
-from dilemma import Dilemma
+from .dilemma import Dilemma
 from enum import Enum
 from typing import TypedDict
 import math
@@ -299,9 +299,12 @@ class Simulation():
             j = self.random_neighbor(i)
             fi = self.calculate_fitness(i)
             fj = self.calculate_fitness(j)
+            #p = 1 / (1 + math.exp(-intensity * (fj - fi)))
+            #if random.choices([True, False], weights=[p, 1-p], k=1):
             p = 1 / (1 + math.exp(-intensity * (fj - fi)))
-            if random.choices([True, False], weights=[p, 1-p], k=1):
+            if random.random() < p:
                 self.graph[i]['strategy'] = self.graph[j]['strategy']
+
 
 
     def calculate_fitness(self, id: int) -> float:
@@ -390,6 +393,12 @@ class Simulation():
         print(f"\rCompleted {iterations} rounds.")
 
         return self.strategy_distribution()
+    
+
+
+    def average_degree(self) -> float:
+        return sum(len(node['neighbors']) for node in self.graph.values()) / self.num_nodes
+
 
 
 if __name__ == '__main__':

@@ -1,30 +1,40 @@
-# analysis/plot_trajectories.py
+from pathlib import Path
 
-import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import pandas as pd
 
-def plot_trajectories(
-        timeseries="data/timeseries.csv",
-        runs="data/runs.csv",
-        out="docs/trajectories.png",
-        max_runs=5
-    ):
 
-    ts = pd.read_csv(timeseries)
-    df = pd.read_csv(runs)
+def plot_trajectories(max_runs: int = 5) -> None:
+    ROOT = Path(__file__).resolve().parents[1]
+    ts_path = ROOT / "data" / "timeseries.csv"
+    runs_path = ROOT / "data" / "runs.csv"
+    out_path = ROOT / "docs" / "trajectories_example.png"
 
-    chosen = df["run_id"].unique()[:max_runs]
+    ts = pd.read_csv(ts_path)
+    runs = pd.read_csv(runs_path)
 
-    plt.figure(figsize=(8,6))
-    for rid in chosen:
-        sub = ts[ts["run_id"] == rid]
-        plt.plot(sub["iter"], sub["frac_coop"], alpha=0.6)
+    run_ids = runs["run_id"].unique()[:max_runs]
+
+    if len(run_ids) == 0:
+        print("No runs found in runs.csv")
+        return
+
+    plt.figure(figsize=(8, 6))
+
+    for rid in run_ids:
+        sub = ts[ts["run_id"] == rid].sort_values("iter")
+        plt.plot(sub["iter"], sub["frac_coop"], alpha=0.5, label=rid)
 
     plt.xlabel("Iteration")
-    plt.ylabel("Cooperation")
-    plt.title("Cooperation Trajectories")
+    plt.ylabel("Fraction cooperators")
+    plt.title("Example cooperation trajectories")
+    plt.legend(fontsize=6)
 
-    os.makedirs(os.path.dirname(out), exist_ok=True)
-    plt.savefig(out, dpi=300, bbox_inches="tight")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close()
+    print(f"Saved {out_path}")
+
+
+if __name__ == "__main__":
+    plot_trajectories()

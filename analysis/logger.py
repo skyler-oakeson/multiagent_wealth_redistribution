@@ -20,16 +20,27 @@ def write_row(path, fieldnames, row):
 
 
 def log_run_summary(run_id, params, stats):
-    fields = [
-        "run_id", "seed", "network_type", "N", "avg_degree",
-        "T", "alpha", "theta", "beta", "beneficiary_rule",
-        "init_frac_coop", "converged", "iters_to_conv", "final_frac_coop"
-    ]
+    fieldnames = [
+    "run_id",
+    "seed",
+    "network_type",
+    "N",
+    "avg_degree",
+    "T",
+    "alpha",
+    "theta",
+    "beta",
+    "beneficiary_rule",
+    "init_frac_coop",
+    "converged",
+    "iters_to_conv",
+    "final_frac_coop",
+]
 
     row = {"run_id":run_id}
     row.update(params)
     row.update(stats)
-    write_row(RUNS_FILE, fields, row)
+    write_row(RUNS_FILE, fieldnames, row)
 
 
 
