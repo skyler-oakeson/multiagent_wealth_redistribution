@@ -22,5 +22,11 @@ lint:
 check:
 	$(VENV_ACTIVATE) && python -m pyright $$(git ls-files '*.py') && python -m ruff check -v $$(git ls-files '*.py')
 
+visualize:
+	$(VENV_ACTIVATE) && python analysis/plot_curves.py && python analysis/plot_heatmap.py && python analysis/plot_trajectories.py
+
+experiment:
+	$(VENV_ACTIVATE) && python src/experiment.py
+
 clean:
 	rm -rf $(VENV)

@@ -2,8 +2,8 @@
 # Produces the runs.csv + timeseries.csv for logger.py
 
 import random
-from .main import Simulation
-from analysis.logger import log_run_summary, log_timeseries
+from main import Simulation
+from logger import log_run_summary, log_timeseries
 
 
 def run_single_simulation(

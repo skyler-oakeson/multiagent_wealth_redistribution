@@ -5,7 +5,7 @@ Promotes Cooperation in Multiagent Systems: https://arxiv.org/pdf/1802.01730.
 Authored by Flavio L. Pinherio and Fernando P. Santos.
 """
 
-from .dilemma import Dilemma
+from dilemma import Dilemma
 from enum import Enum
 from typing import TypedDict
 import math
