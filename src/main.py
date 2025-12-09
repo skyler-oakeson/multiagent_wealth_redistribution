@@ -299,10 +299,8 @@ class Simulation():
             j = self.random_neighbor(i)
             fi = self.calculate_fitness(i)
             fj = self.calculate_fitness(j)
-            #p = 1 / (1 + math.exp(-intensity * (fj - fi)))
-            #if random.choices([True, False], weights=[p, 1-p], k=1):
             p = 1 / (1 + math.exp(-intensity * (fj - fi)))
-            if random.random() < p:
+            if random.choices([True, False], weights=[p, 1-p], k=1):
                 self.graph[i]['strategy'] = self.graph[j]['strategy']
 
 
@@ -404,5 +402,5 @@ class Simulation():
 if __name__ == '__main__':
     sim = Simulation(10**3)
     sim.build_HRG()
-    distribution = sim.run(10**4)
-    print(distribution)
+    coop, defect = sim.run(10**4)
+    print(f"Percentage of Cooperators: {coop * 100}% \nPercentage of Defectors:   {defect * 100}%")
