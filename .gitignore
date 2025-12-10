@@ -210,3 +210,5 @@ __marimo__/
 
 # Nix shell
 *.nix
+
+timeseries_all_dilemma.csv
